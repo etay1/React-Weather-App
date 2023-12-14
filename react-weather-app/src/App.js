@@ -8,6 +8,7 @@ const cityCoordinates = {
   "Wilmington, DE": "39.745833,-75.546667",
   "Los Angeles, CA": "34.02,-118.7421",
   "San Diego, CA": "32.715,-117.1625",
+  "Eau Claire, WI": "44.8114,-91.4985",
 };
 
 function App() {
