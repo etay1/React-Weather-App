@@ -2,17 +2,33 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+const cityCoordinates = {
+  "Rochester, NY": "43.165556,-77.611389",
+  "Brockport, NY": "43.214167,-77.939444",
+  "Wilmington, DE": "39.745833,-75.546667",
+  "Los Angeles, CA": "34.02,-118.7421",
+  "San Diego, CA": "32.715,-117.1625",
+};
+
 function App() {
   const [city, setCity] = useState("");
   const [days, setDays] = useState(1);
   const [temperatures, setTemperatures] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
     try {
+      const coordinates = cityCoordinates[city];
+
+      if (!coordinates) {
+        console.error("Invalid city selection");
+        return;
+      }
+
       const response = await axios.get(
-        `https://api.weather.gov/points/${city}`
+        `https://api.weather.gov/points/${coordinates}`
       );
 
       // Extract the forecast URL from the response
@@ -27,6 +43,7 @@ function App() {
         .map((period) => period.temperature);
 
       setTemperatures(temps);
+      setSuccessMessage(`Temperature in ${city} for the next ${days} day(s):`);
     } catch (error) {
       console.error(
         "Error fetching data:",
@@ -37,60 +54,61 @@ function App() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (city && days) {
-      fetchData();
+      await fetchData();
     }
   };
 
   return (
     <div className="page">
-      <h1 className="title">Weather App</h1>
-      <form className="form" onSubmit={handleSubmit}>
-        <label>
-          Select City:
-          <select value={city} onChange={(e) => setCity(e.target.value)}>
-            <option value="">Select a city</option>
-            <option value="43.165556,-77.611389">Rochester, NY</option>
-            <option value="43.214167,-77.939444">Brockport, NY</option>
-            <option value="39.745833,-75.546667">Wilmington, DE</option>
-            <option value="34.02,-118.7421">Los Angeles, CA</option>
-            <option value="32.715,-117.1625">San Diego, CA</option>
-          </select>
-        </label>
-        <label>
-          Select Days:
-          <select value={days} onChange={(e) => setDays(e.target.value)}>
-            <option value="1">1 day</option>
-            <option value="2">2 days</option>
-            <option value="3">3 days</option>
-            <option value="4">4 days</option>
-            <option value="5">5 days</option>
-            <option value="6">6 days</option>
-            <option value="7">7 days</option>
-          </select>
-        </label>
-        <button className="button" type="submit">Submit</button>
-      </form>
+      <div className="container">
+        <h1 className="title">Weather App</h1>
+        <form className="form" onSubmit={handleSubmit}>
+          <label>
+            Select City:
+            <select value={city} onChange={(e) => setCity(e.target.value)}>
+              <option value="">Select a city</option>
+              {Object.keys(cityCoordinates).map((cityName) => (
+                <option key={cityName} value={cityName}>
+                  {cityName}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Select Days:
+            <select value={days} onChange={(e) => setDays(e.target.value)}>
+              {[1, 2, 3, 4, 5, 6, 7].map((num) => (
+                <option key={num} value={num}>
+                  {`${num} day(s)`}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="button" type="submit">
+            Submit
+          </button>
+        </form>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        temperatures.length > 0 && (
+        {loading && <p>Loading...</p>}
+
+        {successMessage && <p>{successMessage}</p>}
+
+        {temperatures.length > 0 && (
           <div>
-            <p>{`Temperature in ${city} for the next ${days} day(s):`}</p>
             <ul>
               {temperatures.map((temp, index) => (
                 <li key={index}>{`Day ${index + 1}: ${temp}°F`}</li>
               ))}
             </ul>
           </div>
-        )
-      )}
+        )}
 
-      {/* Display date and time */}
-      <p>{`Current Date and Time: ${new Date().toLocaleString()}`}</p>
+        {/* Display date and time */}
+        <p>{`Current Date and Time: ${new Date().toLocaleString()}`}</p>
+      </div>
     </div>
   );
 }
