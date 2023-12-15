@@ -1,6 +1,5 @@
 // src/App.js
 import React, { useState } from "react";
-import axios from "axios";
 
 const cityCoordinates = {
   "Rochester, NY": "43.165556,-77.611389",
@@ -28,28 +27,36 @@ function App() {
         return;
       }
 
-      const response = await axios.get(
+      const response = await fetch(
         `https://api.weather.gov/points/${coordinates}`
       );
 
-      // Extract the forecast URL from the response
-      const forecastURL = response.data.properties.forecast;
+      if (!response.ok) {
+        throw new Error(`Failed to fetch coordinates: ${response.statusText}`);
+      }
 
-      // Fetch the forecast data using the obtained URL
-      const forecastResponse = await axios.get(forecastURL);
+      const responseData = await response.json();
+      const forecastURL = responseData.properties.forecast;
 
-      // Extract temperatures from the forecast response based on selected days
-      const temps = forecastResponse.data.properties.periods
+      const forecastResponse = await fetch(forecastURL);
+
+      if (!forecastResponse.ok) {
+        throw new Error(
+          `Failed to fetch forecast data: ${forecastResponse.statusText}`
+        );
+      }
+
+      const forecastData = await forecastResponse.json();
+
+      const temps = forecastData.properties.periods
         .slice(0, days)
         .map((period) => period.temperature);
 
       setTemperatures(temps);
+      console.log("Temperatures:", temps);
       setSuccessMessage(`Temperature in ${city} for the next ${days} day(s):`);
     } catch (error) {
-      console.error(
-        "Error fetching data:",
-        error.response || error.message || error
-      );
+      console.error("Error fetching data:", error.message || error);
     } finally {
       setLoading(false);
     }
