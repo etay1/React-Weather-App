@@ -82,3 +82,8 @@ ul {
 li {
   margin-bottom: 8px;
 }
+
+.error-message {
+  color: red;
+  padding-top: 8px;
+}
