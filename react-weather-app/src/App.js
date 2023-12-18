@@ -1,7 +1,12 @@
-// src/App.js
 import React, { useState } from "react";
+import FormComponent from "./components/Form";
+import LoadingIndicator from "./components/LoadingIndicator";
+import SuccessMessage from "./components/SuccessMessage";
+import TemperatureList from "./components/TemperatureList";
+import DateTimeDisplay from "./components/DateTimeDisplay";
 
 const cityCoordinates = {
+  "Buffalo, NY": "42.8864,-78.8784",
   "Rochester, NY": "43.165556,-77.611389",
   "Brockport, NY": "43.214167,-77.939444",
   "Wilmington, DE": "39.745833,-75.546667",
@@ -10,7 +15,7 @@ const cityCoordinates = {
   "Eau Claire, WI": "44.8114,-91.4985",
 };
 
-function App() {
+const App = () => {
   const [city, setCity] = useState("");
   const [days, setDays] = useState(1);
   const [temperatures, setTemperatures] = useState([]);
@@ -19,6 +24,7 @@ function App() {
 
   const fetchData = async () => {
     setLoading(true);
+
     try {
       const coordinates = cityCoordinates[city];
 
@@ -27,9 +33,7 @@ function App() {
         return;
       }
 
-      const response = await fetch(
-        `https://api.weather.gov/points/${coordinates}`
-      );
+      const response = await fetch(`https://api.weather.gov/points/${coordinates}`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch coordinates: ${response.statusText}`);
@@ -41,9 +45,7 @@ function App() {
       const forecastResponse = await fetch(forecastURL);
 
       if (!forecastResponse.ok) {
-        throw new Error(
-          `Failed to fetch forecast data: ${forecastResponse.statusText}`
-        );
+        throw new Error(`Failed to fetch forecast data: ${forecastResponse.statusText}`);
       }
 
       const forecastData = await forecastResponse.json();
@@ -73,52 +75,23 @@ function App() {
     <div className="page">
       <div className="container">
         <h1 className="title">Weather App</h1>
-        <form className="form" onSubmit={handleSubmit}>
-          <label>
-            Select City:
-            <select value={city} onChange={(e) => setCity(e.target.value)}>
-              <option value="">Select a city</option>
-              {Object.keys(cityCoordinates).map((cityName) => (
-                <option key={cityName} value={cityName}>
-                  {cityName}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Select Days:
-            <select value={days} onChange={(e) => setDays(e.target.value)}>
-              {[1, 2, 3, 4, 5, 6, 7].map((num) => (
-                <option key={num} value={num}>
-                  {`${num} day(s)`}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button className="button" type="submit">
-            Submit
-          </button>
-        </form>
 
-        {loading && <p>Loading...</p>}
+        <FormComponent
+          city={city}
+          setCity={setCity}
+          days={days}
+          setDays={setDays}
+          handleSubmit={handleSubmit}
+          cityCoordinates={cityCoordinates}
+        />
 
-        {successMessage && <p>{successMessage}</p>}
-
-        {temperatures.length > 0 && (
-          <div>
-            <ul>
-              {temperatures.map((temp, index) => (
-                <li key={index}>{`Day ${index + 1}: ${temp}°F`}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Display date and time */}
-        <p>{`Current Date and Time: ${new Date().toLocaleString()}`}</p>
+        <LoadingIndicator loading={loading} />
+        <SuccessMessage successMessage={successMessage} />
+        <TemperatureList temperatures={temperatures} />
+        <DateTimeDisplay />
       </div>
     </div>
   );
-}
+};
 
 export default App;
